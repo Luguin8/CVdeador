@@ -7,4 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Evita que Vite borre la pantalla de la terminal, ocultando logs de Rust
+  clearScreen: false,
+  server: {
+    port: 1420,
+    strictPort: true,
+    watch: {
+      // Ignora los cambios en el backend para que Vite no recargue en un loop
+      ignored: ["**/src-tauri/**"],
+    },
+  },
 })
