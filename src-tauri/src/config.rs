@@ -5,6 +5,7 @@ use std::path::PathBuf;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppConfig {
     pub api_key_user: String,
+    pub selected_model: String, // NUEVO: Guardamos el modelo elegido
     pub last_usage: u64,
     pub save_path: String,
     pub cv_base_text: String,
@@ -15,6 +16,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             api_key_user: "".to_string(),
+            selected_model: "gemini-1.5-flash".to_string(), // Modelo por defecto
             last_usage: 0,
             save_path: "./output".to_string(),
             cv_base_text: "".to_string(),
@@ -48,7 +50,6 @@ pub fn save_config_internal(config: &AppConfig) -> Result<(), String> {
     fs::write(path, content).map_err(|e| e.to_string())
 }
 
-// Este es el comando que llamaremos desde React
 #[tauri::command]
 pub fn save_app_config(config: AppConfig) -> Result<(), String> {
     save_config_internal(&config)

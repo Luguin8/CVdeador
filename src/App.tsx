@@ -3,11 +3,13 @@ import { useAppLogic } from "./hooks/useAppLogic";
 import { useCooldown } from "./hooks/useCooldown";
 import { Header } from "./components/Header";
 import { Dropzone, FileData } from "./components/Dropzone";
+import { SettingsModal } from "./components/SettingsModal";
 
 function App() {
   const { config, isGenerating, error, generateCV, saveConfig } = useAppLogic();
   const { isCoolingDown, formattedTime } = useCooldown(config?.last_usage || 0);
   const [jobData, setJobData] = useState<FileData | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   if (!config) return <div className="flex h-screen items-center justify-center bg-[#0f172a] text-slate-400 font-mono">BOOTING SYSTEM...</div>;
 
@@ -71,6 +73,12 @@ function App() {
           {isGenerating ? "Generando..." : "Optimizar Ahora"}
         </button>
       </footer>
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        config={config}
+        onSave={saveConfig}
+      />
     </main>
   );
 }

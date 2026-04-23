@@ -4,20 +4,19 @@ use reqwest::Client;
 use serde_json::json;
 use std::fs;
 
-// CLAVE PÚBLICA INTEGRADA (Asegúrate de pegar tu clave real aquí)
-const APP_API_KEY: &str = "AIzaSyCUgfTeXXhQiobYJmAGFrdeQTt-jPieVeM";
+const APP_API_KEY: &str = ""; // Déjalo vacío, ahora usarás la interfaz para poner tu clave
 
 #[tauri::command]
-pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), String> {
-    let file_bytes = fs::read(&file_path).map_err(|e| format!("Error leyendo archivo: {}", e))?;
+pub async fn read_file_as_base64(filePath: String) -> Result<(String, String), String> {
+    let file_bytes = fs::read(&filePath).map_err(|e| format!("Error leyendo archivo: {}", e))?;
     let base64_data = STANDARD.encode(file_bytes);
 
-    let mime_type = if file_path.to_lowercase().ends_with(".pdf") {
+    let mime_type = if filePath.to_lowercase().ends_with(".pdf") {
         "application/pdf".to_string()
-    } else if file_path.to_lowercase().ends_with(".png") {
+    } else if filePath.to_lowercase().ends_with(".png") {
         "image/png".to_string()
-    } else if file_path.to_lowercase().ends_with(".jpg")
-        || file_path.to_lowercase().ends_with(".jpeg")
+    } else if filePath.to_lowercase().ends_with(".jpg")
+        || filePath.to_lowercase().ends_with(".jpeg")
     {
         "image/jpeg".to_string()
     } else {
@@ -30,41 +29,43 @@ pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), 
 #[tauri::command]
 pub async fn generate_with_gemini(
     prompt: String,
-    base64_data: Option<String>,
-    mime_type: Option<String>,
+    base64Data: Option<String>,
+    mimeType: Option<String>,
 ) -> Result<String, String> {
     let config = load_config();
 
-    // SANITIZACIÓN: .trim() elimina espacios en blanco y saltos de línea copiados por accidente
     let user_key = config.api_key_user.trim();
-    let app_key = APP_API_KEY.trim();
-
     let api_key = if !user_key.is_empty() {
         user_key
     } else {
-        app_key
+        APP_API_KEY
     };
 
-    // VOLVEMOS AL MODELO ESTABLE: "gemini-1.5-flash" es el más compatible globalmente
+    if api_key.is_empty() {
+        return Err("API Key no configurada. Ve a Ajustes y pega tu clave.".to_string());
+    }
+
+    // Inyectamos el modelo seleccionado por el usuario en la URL
+    let model = if !config.selected_model.trim().is_empty() {
+        config.selected_model.trim()
+    } else {
+        "gemini-1.5-flash"
+    };
+
     let url = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
-        api_key
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        model, api_key
     );
 
     let mut parts = vec![json!({"text": prompt})];
 
-    if let (Some(data), Some(mime)) = (base64_data, mime_type) {
+    if let (Some(data), Some(mime)) = (base64Data, mimeType) {
         parts.push(json!({
-            "inline_data": {
-                "mime_type": mime,
-                "data": data
-            }
+            "inline_data": { "mime_type": mime, "data": data }
         }));
     }
 
-    let payload = json!({
-        "contents": [{ "parts": parts }]
-    });
+    let payload = json!({ "contents": [{ "parts": parts }] });
 
     let client = Client::new();
     let res = client
@@ -73,21 +74,18 @@ pub async fn generate_with_gemini(
         .send()
         .await
         .map_err(|e| format!("Error de red: {}", e))?;
-
     let res_json: serde_json::Value = res
         .json()
         .await
         .map_err(|e| format!("Error parseando respuesta: {}", e))?;
 
-    // Capturamos el error específico de Google para mostrarlo en el Frontend
     if let Some(error) = res_json.get("error") {
-        return Err(format!("Google API Error: {}", error.to_string()));
+        return Err(format!("Google Error: {}", error.to_string()));
     }
 
     if let Some(text) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
-        println!("¡ÉXITO! La IA respondió.");
         Ok(text.to_string())
     } else {
-        Err(format!("Respuesta inesperada de la API: {:?}", res_json))
+        Err(format!("Respuesta inesperada: {:?}", res_json))
     }
 }

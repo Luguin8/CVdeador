@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 export interface AppConfig {
     api_key_user: string;
+    selected_model: string;
     last_usage: number;
     save_path: string;
     cv_base_text: string;
