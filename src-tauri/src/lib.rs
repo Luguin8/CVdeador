@@ -3,6 +3,7 @@ mod config; // Registramos el nuevo módulo
 
 use commands::{generate_with_gemini, read_file_as_base64};
 use config::{load_config, save_app_config, AppConfig};
+use tauri_plugin_dialog;
 
 #[tauri::command]
 fn get_app_config() -> AppConfig {
@@ -13,6 +14,7 @@ fn get_app_config() -> AppConfig {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         // Exponemos TODOS los comandos al Frontend
         .invoke_handler(tauri::generate_handler![
             get_app_config,
