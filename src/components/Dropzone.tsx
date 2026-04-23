@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 
 export interface FileData {
@@ -100,8 +100,8 @@ export const Dropzone: React.FC<DropzoneProps> = ({
             onPaste={handlePaste}
             tabIndex={0} // Permite que el div reciba el foco para el Ctrl+V
             className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all outline-none focus:ring-2 focus:ring-indigo-500/50 group ${isDragging
-                    ? 'border-indigo-400 bg-indigo-500/10'
-                    : 'border-slate-600 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-500'
+                ? 'border-indigo-400 bg-indigo-500/10'
+                : 'border-slate-600 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-500'
                 }`}
         >
             <h2 className="text-xl font-bold text-slate-200 mb-2">{title}</h2>

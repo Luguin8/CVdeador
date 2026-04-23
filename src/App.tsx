@@ -4,18 +4,32 @@ import { useCooldown } from "./hooks/useCooldown";
 import { Dropzone, FileData } from "./components/Dropzone";
 
 function App() {
-  const { config, isGenerating, error, generateCV } = useAppLogic();
+  // Quitamos generateCV de la destructuración para que TypeScript no se queje
+  const { config, isGenerating, error } = useAppLogic();
   const { isCoolingDown, formattedTime } = useCooldown(config?.last_usage || 0);
 
-  // Estado para la vacante actual (ruta local o base64 de captura)
   const [jobData, setJobData] = useState<FileData | null>(null);
 
+  // ¡NUEVA TRAMPA DE ERRORES!: Si falla el Backend, te lo mostramos visualmente
+  if (error && !config) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-[#0f172a] p-6">
+        <div className="bg-red-500/10 border border-red-500 p-6 rounded-xl max-w-lg text-center shadow-lg">
+          <h2 className="text-xl font-bold text-red-400 mb-2">Error de conexión con el Backend (Rust)</h2>
+          <p className="text-sm text-slate-300 mb-4">{error}</p>
+          <p className="text-xs text-slate-500 bg-black/50 p-3 rounded">
+            👉 <b>Acción requerida:</b> Haz click derecho aquí, elige "Inspeccionar" (o F12), ve a la pestaña "Consola" y pasame el texto rojo que aparezca ahí.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!config) {
-    return <div className="flex h-screen items-center justify-center text-slate-400 bg-[#0f172a]">Cargando...</div>;
+    return <div className="flex h-screen items-center justify-center text-slate-400 bg-[#0f172a]">Cargando configuración...</div>;
   }
 
   const hasCustomKey = config.api_key_user.trim().length > 0;
-  // Solo podemos generar si hay una vacante cargada y no estamos en cooldown
   const canGenerate = !isGenerating && (!isCoolingDown || hasCustomKey) && jobData !== null;
 
   const handleJobDataSelected = (data: FileData) => {
@@ -26,14 +40,9 @@ function App() {
   const handleGenerateClick = async () => {
     if (!jobData) return;
 
-    // Aquí es donde armaremos el prompt maestro uniendo tu CV Base + Requisitos.
-    // Por ahora, enviamos una instrucción de prueba para validar el pipeline.
-    const testPrompt = "Analiza este documento/imagen y devuelve los requisitos clave en viñetas.";
-
-    // Si tenemos ruta, mandamos ruta. Si tenemos base64, lo mandaremos directo.
-    // (Actualizaremos useAppLogic en el próximo paso para soportar el base64 directo)
-    console.log("Iniciando generación...");
-    // const result = await generateCV(testPrompt, jobData.path);
+    // Usamos el console.log para validar que el botón funciona sin dejar variables huerfanas
+    console.log("Iniciando generación con los datos:", jobData);
+    alert("¡Flujo conectado! En el próximo paso unimos esto con Gemini.");
   };
 
   return (
@@ -65,7 +74,7 @@ function App() {
           title="1. Tu CV Base"
           description="Arrastrá tu PDF actual o revisá el texto guardado."
           extractedText={config.cv_base_text || "Aún no hay un CV base guardado."}
-          onDataSelected={(data) => console.log("CV Base a procesar:", data)}
+          onDataSelected={(data) => console.log("CV Base seleccionado:", data)}
           acceptTextOnly={true}
         />
 
@@ -78,7 +87,8 @@ function App() {
       </div>
 
       <footer className="mt-6 flex justify-between items-center">
-        {error && <p className="text-red-400 text-sm max-w-md truncate">{error}</p>}
+        {/* Aquí mostramos errores no críticos (ej: falló la IA) */}
+        <p className="text-red-400 text-sm max-w-md truncate">{error || ""}</p>
 
         <div className="ml-auto flex gap-4">
           <button className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">
