@@ -65,6 +65,12 @@ function App() {
       <footer className="mt-6 flex justify-between items-center bg-slate-900/30 p-4 rounded-xl border border-slate-800">
         <p className="text-red-400 text-xs italic">{error || ""}</p>
         <button
+          onClick={() => setIsSettingsOpen(true)} // <-- APLICAR EVENTO AQUI
+          className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+        >
+          Ajustes
+        </button>
+        <button
           disabled={!canGenerate}
           onClick={handleGenerateClick}
           className={`px-8 py-3 rounded-lg font-black tracking-widest uppercase text-xs transition-all ${canGenerate ? "bg-indigo-600 hover:scale-105 shadow-indigo-500/20 shadow-xl" : "bg-slate-800 text-slate-500"
