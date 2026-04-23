@@ -5,7 +5,7 @@ use serde_json::json;
 use std::fs;
 
 // CLAVE PÚBLICA INTEGRADA (Reemplaza con tu clave real para el uso gratuito de la app)
-const APP_API_KEY: &str = "AQUI_TU_API_KEY_PUBLICA";
+const APP_API_KEY: &str = "AIzaSyCUgfTeXXhQiobYJmAGFrdeQTt-jPieVeM";
 
 #[tauri::command]
 pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), String> {
