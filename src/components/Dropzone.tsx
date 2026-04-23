@@ -15,79 +15,48 @@ interface DropzoneProps {
     acceptTextOnly?: boolean;
 }
 
-export const Dropzone: React.FC<DropzoneProps> = ({
-    title,
-    description,
-    onDataSelected,
-    extractedText,
-    acceptTextOnly
-}) => {
+export const Dropzone: React.FC<DropzoneProps> = ({ title, description, onDataSelected, extractedText, acceptTextOnly }) => {
     const [isDragging, setIsDragging] = useState(false);
 
-    // 1. Selector Nativo de Tauri
     const handleNativeDialog = async () => {
-        try {
-            const selectedPath = await open({
-                multiple: false,
-                filters: [{
-                    name: 'Archivos',
-                    extensions: acceptTextOnly ? ['pdf', 'txt'] : ['pdf', 'png', 'jpg', 'jpeg', 'txt']
-                }]
-            });
-            if (selectedPath && typeof selectedPath === 'string') {
-                onDataSelected({ path: selectedPath });
-            }
-        } catch (err) {
-            console.error("Error abriendo diálogo:", err);
+        // Si la pantalla de capabilities no está bien, esto fallará aquí.
+        const selected = await open({
+            multiple: false,
+            filters: [{ name: 'Documentos', extensions: acceptTextOnly ? ['pdf', 'txt'] : ['pdf', 'png', 'jpg', 'jpeg'] }]
+        });
+        if (selected && typeof selected === 'string') {
+            onDataSelected({ path: selected });
         }
     };
 
-    // Helper para convertir Blob a Base64 en el navegador
-    const blobToBase64 = (blob: Blob): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                // Quitar el prefijo "data:image/png;base64," para mandarlo limpio a Rust
-                resolve(result.split(',')[1]);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    };
-
-    // 2. Manejo de Drag & Drop (Archivos web)
     const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         setIsDragging(false);
 
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const file = e.dataTransfer.files[0];
-            const base64 = await blobToBase64(file);
-            onDataSelected({ base64, mimeType: file.type });
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                const b64 = (reader.result as string).split(',')[1];
+                onDataSelected({ base64: b64, mimeType: file.type });
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = () => {
-        setIsDragging(false);
-    };
-
-    // 3. Manejo del Portapapeles (Ctrl+V)
     const handlePaste = async (e: React.ClipboardEvent) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1 || items[i].type === 'application/pdf') {
-                const file = items[i].getAsFile();
-                if (file) {
-                    const base64 = await blobToBase64(file);
-                    onDataSelected({ base64, mimeType: file.type });
-                    break; // Tomamos solo el primer archivo pegado
-                }
+        const item = e.clipboardData.items[0];
+        if (item && (item.type.includes('image') || item.type.includes('pdf'))) {
+            const file = item.getAsFile();
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const b64 = (reader.result as string).split(',')[1];
+                    onDataSelected({ base64: b64, mimeType: file.type });
+                };
+                reader.readAsDataURL(file);
             }
         }
     };
@@ -95,30 +64,22 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     return (
         <div
             onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
             onPaste={handlePaste}
-            tabIndex={0} // Permite que el div reciba el foco para el Ctrl+V
-            className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all outline-none focus:ring-2 focus:ring-indigo-500/50 group ${isDragging
-                ? 'border-indigo-400 bg-indigo-500/10'
-                : 'border-slate-600 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-500'
+            className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all h-full ${isDragging ? 'border-indigo-400 bg-indigo-500/10' : 'border-slate-700 bg-slate-800/40 hover:bg-slate-800/60'
                 }`}
         >
-            <h2 className="text-xl font-bold text-slate-200 mb-2">{title}</h2>
-            <p className="text-sm text-slate-400 text-center mb-4">
-                {description} <br /> <span className="text-xs opacity-75">(Soporta arrastrar y pegar)</span>
-            </p>
+            <h2 className="text-lg font-bold text-slate-200">{title}</h2>
+            <p className="text-xs text-slate-500 mb-4 text-center">{description}</p>
 
             {extractedText ? (
-                <div className="w-full mt-4 p-3 bg-slate-900 rounded border border-slate-700 text-xs text-slate-300 max-h-32 overflow-y-auto">
+                <div className="w-full p-3 bg-slate-900/80 rounded border border-slate-700 text-[10px] text-slate-400 font-mono overflow-y-auto max-h-40">
                     {extractedText}
                 </div>
             ) : (
-                <button
-                    onClick={handleNativeDialog}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                >
-                    Explorar Archivos
+                <button onClick={handleNativeDialog} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all">
+                    BUSCAR ARCHIVO
                 </button>
             )}
         </div>
