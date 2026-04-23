@@ -4,19 +4,19 @@ use reqwest::Client;
 use serde_json::json;
 use std::fs;
 
-const APP_API_KEY: &str = ""; // Déjalo vacío, ahora usarás la interfaz para poner tu clave
+const APP_API_KEY: &str = "";
 
 #[tauri::command]
-pub async fn read_file_as_base64(filePath: String) -> Result<(String, String), String> {
-    let file_bytes = fs::read(&filePath).map_err(|e| format!("Error leyendo archivo: {}", e))?;
+pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), String> {
+    let file_bytes = fs::read(&file_path).map_err(|e| format!("Error leyendo archivo: {}", e))?;
     let base64_data = STANDARD.encode(file_bytes);
 
-    let mime_type = if filePath.to_lowercase().ends_with(".pdf") {
+    let mime_type = if file_path.to_lowercase().ends_with(".pdf") {
         "application/pdf".to_string()
-    } else if filePath.to_lowercase().ends_with(".png") {
+    } else if file_path.to_lowercase().ends_with(".png") {
         "image/png".to_string()
-    } else if filePath.to_lowercase().ends_with(".jpg")
-        || filePath.to_lowercase().ends_with(".jpeg")
+    } else if file_path.to_lowercase().ends_with(".jpg")
+        || file_path.to_lowercase().ends_with(".jpeg")
     {
         "image/jpeg".to_string()
     } else {
@@ -29,8 +29,8 @@ pub async fn read_file_as_base64(filePath: String) -> Result<(String, String), S
 #[tauri::command]
 pub async fn generate_with_gemini(
     prompt: String,
-    base64Data: Option<String>,
-    mimeType: Option<String>,
+    base64_data: Option<String>,
+    mime_type: Option<String>,
 ) -> Result<String, String> {
     let config = load_config();
 
@@ -38,28 +38,28 @@ pub async fn generate_with_gemini(
     let api_key = if !user_key.is_empty() {
         user_key
     } else {
-        APP_API_KEY
+        APP_API_KEY.trim()
     };
 
     if api_key.is_empty() {
         return Err("API Key no configurada. Ve a Ajustes y pega tu clave.".to_string());
     }
 
-    // Inyectamos el modelo seleccionado por el usuario en la URL
     let model = if !config.selected_model.trim().is_empty() {
         config.selected_model.trim()
     } else {
         "gemini-1.5-flash"
     };
 
+    // SOLUCIÓN AL 404: Usamos el endpoint /v1/ en lugar de /v1beta/
     let url = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        "https://generativelanguage.googleapis.com/v1/models/{}:generateContent?key={}",
         model, api_key
     );
 
     let mut parts = vec![json!({"text": prompt})];
 
-    if let (Some(data), Some(mime)) = (base64Data, mimeType) {
+    if let (Some(data), Some(mime)) = (base64_data, mime_type) {
         parts.push(json!({
             "inline_data": { "mime_type": mime, "data": data }
         }));
