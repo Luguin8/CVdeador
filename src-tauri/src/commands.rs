@@ -4,7 +4,7 @@ use reqwest::Client;
 use serde_json::json;
 use std::fs;
 
-// CLAVE PÚBLICA INTEGRADA (Reemplaza con tu clave real para el uso gratuito de la app)
+// CLAVE PÚBLICA INTEGRADA (Asegúrate de pegar tu clave real aquí)
 const APP_API_KEY: &str = "AIzaSyCUgfTeXXhQiobYJmAGFrdeQTt-jPieVeM";
 
 #[tauri::command]
@@ -12,7 +12,6 @@ pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), 
     let file_bytes = fs::read(&file_path).map_err(|e| format!("Error leyendo archivo: {}", e))?;
     let base64_data = STANDARD.encode(file_bytes);
 
-    // Detección básica de MIME type (puedes expandirla luego)
     let mime_type = if file_path.to_lowercase().ends_with(".pdf") {
         "application/pdf".to_string()
     } else if file_path.to_lowercase().ends_with(".png") {
@@ -36,22 +35,24 @@ pub async fn generate_with_gemini(
 ) -> Result<String, String> {
     let config = load_config();
 
-    // Usa la clave del usuario si existe, sino usa la clave pública de la app
-    let api_key = if !config.api_key_user.trim().is_empty() {
-        config.api_key_user
+    // SANITIZACIÓN: .trim() elimina espacios en blanco y saltos de línea copiados por accidente
+    let user_key = config.api_key_user.trim();
+    let app_key = APP_API_KEY.trim();
+
+    let api_key = if !user_key.is_empty() {
+        user_key
     } else {
-        APP_API_KEY.to_string()
+        app_key
     };
 
+    // VOLVEMOS AL MODELO ESTABLE: "gemini-1.5-flash" es el más compatible globalmente
     let url = format!(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
         api_key
     );
 
-    // Construir el payload de Gemini
     let mut parts = vec![json!({"text": prompt})];
 
-    // Si se adjunta un archivo (PDF o Imagen), lo agregamos al payload multimodal
     if let (Some(data), Some(mime)) = (base64_data, mime_type) {
         parts.push(json!({
             "inline_data": {
@@ -78,10 +79,15 @@ pub async fn generate_with_gemini(
         .await
         .map_err(|e| format!("Error parseando respuesta: {}", e))?;
 
-    // Extraer el texto de la respuesta de Gemini
+    // Capturamos el error específico de Google para mostrarlo en el Frontend
+    if let Some(error) = res_json.get("error") {
+        return Err(format!("Google API Error: {}", error.to_string()));
+    }
+
     if let Some(text) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
+        println!("¡ÉXITO! La IA respondió.");
         Ok(text.to_string())
     } else {
-        Err(format!("Error en la API de Gemini: {:?}", res_json))
+        Err(format!("Respuesta inesperada de la API: {:?}", res_json))
     }
 }

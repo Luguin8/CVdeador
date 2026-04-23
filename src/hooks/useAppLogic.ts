@@ -44,19 +44,20 @@ export function useAppLogic() {
             let b64 = fileData.base64;
             let mime = fileData.mimeType;
 
-            // Si tenemos un path, le pedimos a Rust que lo lea primero
             if (fileData.path) {
+                // CAMBIO AQUÍ: file_path (Rust) -> filePath (JS/Tauri v2)
                 const [data, detectedMime] = await invoke<[string, string]>('read_file_as_base64', {
-                    file_path: fileData.path // Coincide con Rust
+                    filePath: fileData.path
                 });
                 b64 = data;
                 mime = detectedMime;
             }
 
+            // CAMBIO AQUÍ: base64_data -> base64Data | mime_type -> mimeType
             const result = await invoke<string>('generate_with_gemini', {
                 prompt,
-                base64_data: b64 || null, // Coincide con Rust
-                mime_type: mime || null    // Coincide con Rust
+                base64Data: b64 || null,
+                mimeType: mime || null
             });
 
             setIsGenerating(false);
