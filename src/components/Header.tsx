@@ -1,12 +1,12 @@
 import React from 'react';
+import { open } from '@tauri-apps/plugin-opener';
 
 interface HeaderProps {
-    isCoolingDown: boolean;
-    formattedTime: string;
     hasCustomKey: boolean;
+    onOpenSettings: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isCoolingDown, formattedTime, hasCustomKey }) => {
+export const Header: React.FC<HeaderProps> = ({ hasCustomKey, onOpenSettings }) => {
     return (
         <header className="mb-8 flex justify-between items-start border-b border-slate-800 pb-4 relative">
             <div>
@@ -16,19 +16,20 @@ export const Header: React.FC<HeaderProps> = ({ isCoolingDown, formattedTime, ha
                 <p className="text-xs text-slate-500 mt-1">Local-First CV Generator</p>
 
                 <div className="mt-3 flex items-center gap-3">
-                    {!hasCustomKey && isCoolingDown && (
-                        <span className="text-sm font-mono text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-                            Cooldown: {formattedTime}
-                        </span>
-                    )}
-                    {hasCustomKey && (
+                    {hasCustomKey ? (
                         <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded border border-emerald-400/20">
-                            PRO KEY ACTIVA
+                            🟢 IA CONECTADA
                         </span>
+                    ) : (
+                        <button
+                            onClick={onOpenSettings}
+                            className="text-xs font-bold text-red-400 bg-red-400/10 hover:bg-red-400/20 px-2 py-1 rounded border border-red-400/20 cursor-pointer animate-pulse"
+                        >
+                            🔴 REQUIERE API KEY (Click aquí)
+                        </button>
                     )}
                 </div>
             </div>
-
             {/* Sección de Monetización y Contacto */}
             <div className="flex flex-col items-end gap-2 text-[10px] uppercase tracking-widest font-bold">
                 <div className="flex gap-4 border border-slate-700 bg-slate-900/50 p-2 rounded-lg">

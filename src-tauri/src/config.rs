@@ -5,8 +5,7 @@ use std::path::PathBuf;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppConfig {
     pub api_key_user: String,
-    pub selected_model: String, // NUEVO: Guardamos el modelo elegido
-    pub last_usage: u64,
+    pub selected_model: String,
     pub save_path: String,
     pub cv_base_text: String,
     pub cv_template: String,
@@ -16,8 +15,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             api_key_user: "".to_string(),
-            selected_model: "gemini-1.5-flash".to_string(), // Modelo por defecto
-            last_usage: 0,
+            selected_model: "gemini-1.5-flash".to_string(),
             save_path: "./output".to_string(),
             cv_base_text: "".to_string(),
             cv_template: "<h1>{{name}}</h1>".to_string(),

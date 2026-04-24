@@ -4,8 +4,6 @@ use reqwest::Client;
 use serde_json::json;
 use std::fs;
 
-const APP_API_KEY: &str = "";
-
 #[tauri::command]
 pub async fn read_file_as_base64(file_path: String) -> Result<(String, String), String> {
     let file_bytes = fs::read(&file_path).map_err(|e| format!("Error leyendo archivo: {}", e))?;
@@ -33,16 +31,13 @@ pub async fn generate_with_gemini(
     mime_type: Option<String>,
 ) -> Result<String, String> {
     let config = load_config();
+    let api_key = config.api_key_user.trim();
 
-    let user_key = config.api_key_user.trim();
-    let api_key = if !user_key.is_empty() {
-        user_key
-    } else {
-        APP_API_KEY.trim()
-    };
-
+    // BLOQUEO ESTRICTO: Si no hay clave, devolvemos error
     if api_key.is_empty() {
-        return Err("API Key no configurada. Ve a Ajustes y pega tu clave.".to_string());
+        return Err(
+            "API Key no configurada. Haz clic en 'Ajustes' para vincular tu cuenta.".to_string(),
+        );
     }
 
     let model = if !config.selected_model.trim().is_empty() {
@@ -51,9 +46,8 @@ pub async fn generate_with_gemini(
         "gemini-1.5-flash"
     };
 
-    // SOLUCIÓN AL 404: Usamos el endpoint /v1/ en lugar de /v1beta/
     let url = format!(
-        "https://generativelanguage.googleapis.com/v1/models/{}:generateContent?key={}",
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
         model, api_key
     );
 
@@ -80,7 +74,7 @@ pub async fn generate_with_gemini(
         .map_err(|e| format!("Error parseando respuesta: {}", e))?;
 
     if let Some(error) = res_json.get("error") {
-        return Err(format!("Google Error: {}", error.to_string()));
+        return Err(format!("Error de Google: {}", error.to_string()));
     }
 
     if let Some(text) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {

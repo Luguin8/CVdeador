@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { useAppLogic } from "./hooks/useAppLogic";
-import { useCooldown } from "./hooks/useCooldown";
 import { Header } from "./components/Header";
 import { Dropzone, FileData } from "./components/Dropzone";
 import { SettingsModal } from "./components/SettingsModal";
 
 function App() {
   const { config, isGenerating, error, generateCV, saveConfig } = useAppLogic();
-  const { isCoolingDown, formattedTime } = useCooldown(config?.last_usage || 0);
   const [jobData, setJobData] = useState<FileData | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   if (!config) return <div className="flex h-screen items-center justify-center bg-[#0f172a] text-slate-400 font-mono">BOOTING SYSTEM...</div>;
 
   const hasCustomKey = config.api_key_user.trim().length > 0;
-  const canGenerate = !isGenerating && (!isCoolingDown || hasCustomKey) && jobData !== null;
+  // Solo se puede generar si hay API Key y si hay un puesto de trabajo cargado
+  const canGenerate = !isGenerating && hasCustomKey && jobData !== null;
 
-  // Fase 1: Ingesta del CV Base (Opcional si ya existe texto)
   const handleCVBaseSelected = async (data: FileData) => {
+    if (!hasCustomKey) return setIsSettingsOpen(true); // Fuerza a poner la key
+
     const prompt = "Extrae todo el texto de mi currículum de forma limpia y estructurada. Ignora diseños, solo quiero el contenido técnico y profesional.";
     const extracted = await generateCV(prompt, data);
     if (extracted) {
@@ -25,9 +25,8 @@ function App() {
     }
   };
 
-  // Fase 2: Generación Final
   const handleGenerateClick = async () => {
-    if (!jobData) return;
+    if (!jobData || !hasCustomKey) return;
     const prompt = `
       Actúa como experto en reclutamiento ATS.
       MI CV BASE: ${config.cv_base_text}
@@ -39,13 +38,13 @@ function App() {
     const result = await generateCV(prompt, jobData);
     if (result) {
       console.log("CV Generado:", result);
-      // Próximamente: Renderizado del resultado
+      alert("Generación Exitosa! (Revisa la consola)");
     }
   };
 
   return (
     <main className="flex h-screen flex-col bg-[#0f172a] text-white p-6 overflow-hidden">
-      <Header isCoolingDown={isCoolingDown} formattedTime={formattedTime} hasCustomKey={hasCustomKey} />
+      <Header hasCustomKey={hasCustomKey} onOpenSettings={() => setIsSettingsOpen(true)} />
 
       <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
         <Dropzone
@@ -63,22 +62,26 @@ function App() {
       </div>
 
       <footer className="mt-6 flex justify-between items-center bg-slate-900/30 p-4 rounded-xl border border-slate-800">
-        <p className="text-red-400 text-xs italic">{error || ""}</p>
-        <button
-          onClick={() => setIsSettingsOpen(true)} // <-- APLICAR EVENTO AQUI
-          className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
-        >
-          Ajustes
-        </button>
-        <button
-          disabled={!canGenerate}
-          onClick={handleGenerateClick}
-          className={`px-8 py-3 rounded-lg font-black tracking-widest uppercase text-xs transition-all ${canGenerate ? "bg-indigo-600 hover:scale-105 shadow-indigo-500/20 shadow-xl" : "bg-slate-800 text-slate-500"
-            }`}
-        >
-          {isGenerating ? "Generando..." : "Optimizar Ahora"}
-        </button>
+        <p className="text-red-400 text-xs italic max-w-xl truncate">{error || ""}</p>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="px-4 py-3 text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            ⚙️ Ajustes
+          </button>
+          <button
+            disabled={!canGenerate}
+            onClick={handleGenerateClick}
+            className={`px-8 py-3 rounded-lg font-black tracking-widest uppercase text-xs transition-all ${canGenerate ? "bg-indigo-600 hover:scale-105 shadow-indigo-500/20 shadow-xl cursor-pointer" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+              }`}
+          >
+            {isGenerating ? "Procesando IA..." : "Optimizar Ahora"}
+          </button>
+        </div>
       </footer>
+
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
