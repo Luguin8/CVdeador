@@ -45,7 +45,7 @@ export function useAppLogic() {
             let mime = fileData.mimeType;
 
             if (fileData.path) {
-                // CAMBIO AQUÍ: file_path (Rust) -> filePath (JS/Tauri v2)
+                // CORRECCIÓN: Usamos camelCase (filePath) para que Tauri lo mapee a file_path en Rust
                 const [data, detectedMime] = await invoke<[string, string]>('read_file_as_base64', {
                     filePath: fileData.path
                 });
@@ -53,7 +53,6 @@ export function useAppLogic() {
                 mime = detectedMime;
             }
 
-            // CAMBIO AQUÍ: base64_data -> base64Data | mime_type -> mimeType
             const result = await invoke<string>('generate_with_gemini', {
                 prompt,
                 base64Data: b64 || null,

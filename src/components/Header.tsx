@@ -23,27 +23,27 @@ export const Header: React.FC<HeaderProps> = ({ hasCustomKey, onOpenSettings }) 
                     ) : (
                         <button
                             onClick={onOpenSettings}
-                            className="text-xs font-bold text-red-400 bg-red-400/10 hover:bg-red-400/20 px-2 py-1 rounded border border-red-400/20 cursor-pointer animate-pulse"
+                            className="text-[10px] font-bold text-red-400 bg-red-400/10 hover:bg-red-400/20 px-2 py-1 rounded border border-red-400/20 cursor-pointer animate-pulse uppercase tracking-tighter"
                         >
-                            🔴 REQUIERE API KEY (Click aquí)
+                            🔴 REQUIERE API KEY (Configurar aquí)
                         </button>
                     )}
                 </div>
             </div>
-            {/* Sección de Monetización y Contacto */}
+
             <div className="flex flex-col items-end gap-2 text-[10px] uppercase tracking-widest font-bold">
                 <div className="flex gap-4 border border-slate-700 bg-slate-900/50 p-2 rounded-lg">
-                    <a href="https://cafecito.app/lugomartin" target="_blank" className="text-orange-400 hover:text-orange-300 transition-colors">
+                    <button onClick={() => open('https://cafecito.app/lugomartin')} className="text-orange-400 hover:text-orange-300 transition-colors cursor-pointer">
                         ☕ Cafecito
-                    </a>
-                    <a href="https://www.paypal.com/paypalme/lugomartin" target="_blank" className="text-blue-400 hover:text-blue-300 transition-colors">
+                    </button>
+                    <button onClick={() => open('https://www.paypal.com/paypalme/lugomartin')} className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
                         💙 PayPal
-                    </a>
-                    <a href="mailto:lugoamartin@gmail.com" className="text-slate-400 hover:text-white transition-colors">
+                    </button>
+                    <button onClick={() => open('mailto:lugoamartin@gmail.com')} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
                         ✉️ Contacto
-                    </a>
+                    </button>
                 </div>
-                <span className="text-slate-600 mr-1">v1.0.0 Stable</span>
+                <span className="text-slate-600 mr-1 italic">v1.0.0 Stable Build</span>
             </div>
         </header>
     );
