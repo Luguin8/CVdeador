@@ -33,7 +33,6 @@ pub async fn generate_with_gemini(
     let config = load_config();
     let api_key = config.api_key_user.trim();
 
-    // BLOQUEO ESTRICTO: Si no hay clave, devolvemos error
     if api_key.is_empty() {
         return Err(
             "API Key no configurada. Haz clic en 'Ajustes' para vincular tu cuenta.".to_string(),
@@ -43,7 +42,7 @@ pub async fn generate_with_gemini(
     let model = if !config.selected_model.trim().is_empty() {
         config.selected_model.trim()
     } else {
-        "gemini-1.5-flash"
+        "gemini-2.0-flash"
     };
 
     let url = format!(
@@ -73,8 +72,21 @@ pub async fn generate_with_gemini(
         .await
         .map_err(|e| format!("Error parseando respuesta: {}", e))?;
 
+    // INTERCEPTAMOS ERRORES ESPECÍFICOS DE GOOGLE
     if let Some(error) = res_json.get("error") {
-        return Err(format!("Error de Google: {}", error.to_string()));
+        let code = error.get("code").and_then(|c| c.as_i64()).unwrap_or(0);
+
+        // Si es error 429, damos un mensaje humano
+        if code == 429 {
+            return Err("Límite gratuito de Google alcanzado. Por favor, espera 1 minuto y vuelve a intentar.".to_string());
+        }
+
+        // Si es otro error, mostramos el mensaje original pero limpio
+        let msg = error
+            .get("message")
+            .and_then(|m| m.as_str())
+            .unwrap_or("Error desconocido");
+        return Err(format!("Error de IA: {}", msg));
     }
 
     if let Some(text) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { open } from '@tauri-apps/plugin-opener';
+// CORRECCIÓN: Importamos openUrl en lugar de open
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { AppConfig } from '../hooks/useAppLogic';
 
 interface SettingsModalProps {
@@ -35,14 +36,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                 </div>
 
                 <div className="p-6 overflow-y-auto">
-                    {/* Tutorial Box */}
                     <div className="bg-slate-800/50 border border-indigo-500/30 rounded-lg p-5 mb-6">
                         <h3 className="text-indigo-400 font-bold mb-3 flex items-center gap-2">
                             <span>🚀</span> ¿Cómo obtener tu API Key gratuita en 1 minuto?
                         </h3>
                         <ol className="text-sm text-slate-300 space-y-3 list-decimal list-inside marker:text-indigo-500 marker:font-bold">
                             <li>Haz clic en este botón para ir a la plataforma oficial de Google: <br />
-                                <button onClick={() => open('https://aistudio.google.com/app/apikey')} className="mt-2 mb-1 px-4 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/50 rounded cursor-pointer transition-colors">
+                                {/* CORRECCIÓN: Usamos openUrl() aquí */}
+                                <button onClick={() => openUrl('https://aistudio.google.com/app/apikey')} className="mt-2 mb-1 px-4 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/50 rounded cursor-pointer transition-colors">
                                     Abrir Google AI Studio
                                 </button>
                             </li>
@@ -52,7 +53,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                         </ol>
                     </div>
 
-                    {/* Formulario */}
                     <div className="space-y-4">
                         <div>
                             <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
@@ -76,8 +76,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-950 border border-slate-600 rounded p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                             >
-                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recomendado - Muy Rápido)</option>
-                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Para análisis complejos)</option>
+                                {/* Usamos los alias exactos que te dio el debug */}
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (El más rápido y recomendado)</option>
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Estándar)</option>
+                                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite (Ultra liviano)</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Última versión)</option>
                             </select>
                         </div>
                     </div>

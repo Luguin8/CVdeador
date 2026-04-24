@@ -1,5 +1,6 @@
 import React from 'react';
-import { open } from '@tauri-apps/plugin-opener';
+// CORRECCIÓN: Importamos openUrl en lugar de open
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 interface HeaderProps {
     hasCustomKey: boolean;
@@ -33,13 +34,14 @@ export const Header: React.FC<HeaderProps> = ({ hasCustomKey, onOpenSettings }) 
 
             <div className="flex flex-col items-end gap-2 text-[10px] uppercase tracking-widest font-bold">
                 <div className="flex gap-4 border border-slate-700 bg-slate-900/50 p-2 rounded-lg">
-                    <button onClick={() => open('https://cafecito.app/lugomartin')} className="text-orange-400 hover:text-orange-300 transition-colors cursor-pointer">
+                    {/* CORRECCIÓN: Usamos openUrl() en todos los botones */}
+                    <button onClick={() => openUrl('https://cafecito.app/lugomartin')} className="text-orange-400 hover:text-orange-300 transition-colors cursor-pointer">
                         ☕ Cafecito
                     </button>
-                    <button onClick={() => open('https://www.paypal.com/paypalme/lugomartin')} className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
+                    <button onClick={() => openUrl('https://www.paypal.com/paypalme/lugomartin')} className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
                         💙 PayPal
                     </button>
-                    <button onClick={() => open('mailto:lugoamartin@gmail.com')} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                    <button onClick={() => openUrl('mailto:lugoamartin@gmail.com')} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
                         ✉️ Contacto
                     </button>
                 </div>

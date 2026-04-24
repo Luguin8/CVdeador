@@ -15,7 +15,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             api_key_user: "".to_string(),
-            selected_model: "gemini-1.5-flash".to_string(),
+            selected_model: "gemini-2.0-flash".to_string(),
             save_path: "./output".to_string(),
             cv_base_text: "".to_string(),
             cv_template: "<h1>{{name}}</h1>".to_string(),
