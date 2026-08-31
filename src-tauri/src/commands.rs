@@ -42,7 +42,7 @@ pub async fn generate_with_gemini(
     let model = if !config.selected_model.trim().is_empty() {
         config.selected_model.trim()
     } else {
-        "gemini-2.0-flash"
+        "gemini-flash-latest"
     };
 
     let url = format!(
@@ -90,8 +90,28 @@ pub async fn generate_with_gemini(
     }
 
     if let Some(text) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
-        Ok(text.to_string())
+        Ok(strip_code_fences(text))
     } else {
         Err(format!("Respuesta inesperada: {:?}", res_json))
     }
+}
+
+/// Gemini suele envolver el HTML en ```html ... ```; lo limpiamos.
+fn strip_code_fences(text: &str) -> String {
+    let t = text.trim();
+    if let Some(rest) = t.strip_prefix("```") {
+        let rest = rest
+            .strip_prefix("html")
+            .or_else(|| rest.strip_prefix("HTML"))
+            .unwrap_or(rest);
+        return rest.trim().trim_end_matches("```").trim().to_string();
+    }
+    t.to_string()
+}
+
+/// Guarda el CV HTML generado en la ruta indicada (elegida con el diálogo del front).
+#[tauri::command]
+pub fn save_html_cv(path: String, html: String) -> Result<String, String> {
+    fs::write(&path, html).map_err(|e| format!("Error al guardar: {}", e))?;
+    Ok(path)
 }

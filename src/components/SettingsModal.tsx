@@ -12,11 +12,11 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, config, onSave }) => {
     const [apiKey, setApiKey] = useState(config.api_key_user);
-    const [selectedModel, setSelectedModel] = useState(config.selected_model || 'gemini-1.5-flash');
+    const [selectedModel, setSelectedModel] = useState(config.selected_model || 'gemini-flash-latest');
 
     useEffect(() => {
         setApiKey(config.api_key_user);
-        setSelectedModel(config.selected_model || 'gemini-1.5-flash');
+        setSelectedModel(config.selected_model || 'gemini-flash-latest');
     }, [config]);
 
     if (!isOpen) return null;
@@ -76,11 +76,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-950 border border-slate-600 rounded p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                             >
-                                {/* Usamos los alias exactos que te dio el debug */}
-                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (El más rápido y recomendado)</option>
-                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Estándar)</option>
-                                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite (Ultra liviano)</option>
-                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Última versión)</option>
+                                {/* Alias vigentes de la API de Gemini (v1beta) */}
+                                <option value="gemini-flash-latest">Gemini Flash (siempre la última versión — recomendado)</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (ultra liviano)</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (máxima calidad)</option>
                             </select>
                         </div>
                     </div>

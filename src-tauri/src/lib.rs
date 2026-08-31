@@ -1,7 +1,7 @@
 mod commands;
 mod config; // Registramos el nuevo módulo
 
-use commands::{generate_with_gemini, read_file_as_base64};
+use commands::{generate_with_gemini, read_file_as_base64, save_html_cv};
 use config::{load_config, save_app_config, AppConfig};
 use tauri_plugin_dialog;
 
@@ -20,7 +20,8 @@ pub fn run() {
             get_app_config,
             save_app_config,
             read_file_as_base64,
-            generate_with_gemini
+            generate_with_gemini,
+            save_html_cv
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

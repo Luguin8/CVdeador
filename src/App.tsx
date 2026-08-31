@@ -3,11 +3,13 @@ import { useAppLogic } from "./hooks/useAppLogic";
 import { Header } from "./components/Header";
 import { Dropzone, FileData } from "./components/Dropzone";
 import { SettingsModal } from "./components/SettingsModal";
+import { ResultModal } from "./components/ResultModal";
 
 function App() {
   const { config, isGenerating, error, generateCV, saveConfig } = useAppLogic();
   const [jobData, setJobData] = useState<FileData | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [resultHtml, setResultHtml] = useState<string | null>(null);
 
   if (!config) return (
     <div className="flex h-screen items-center justify-center bg-[#0f172a] text-slate-400 font-mono">
@@ -42,8 +44,7 @@ function App() {
     `;
     const result = await generateCV(prompt, jobData);
     if (result) {
-      console.log("HTML Generado:", result);
-      alert("¡Éxito! CV generado correctamente en la consola.");
+      setResultHtml(result);
     }
   };
 
@@ -93,6 +94,8 @@ function App() {
         config={config}
         onSave={saveConfig}
       />
+
+      <ResultModal html={resultHtml} onClose={() => setResultHtml(null)} />
     </main>
   );
 }
